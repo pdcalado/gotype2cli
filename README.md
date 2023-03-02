@@ -80,4 +80,9 @@ Gotchas:
   - if flag `--no-object` is set, print error value (nil or message)
 - the flag `--no-object` can be used to disable the default behavior of printing the object
 - all types involved must be JSON compatible, including function arguments
+- the flag `--patch` requires that the pkg [json-patch](https://github.com/evanphx/json-patch) is imported (refer to their [README](https://github.com/evanphx/json-patch#readme) for details on RFC compatibility)
 
+## TODO
+
+- [ ] detect functions that create the type (like `NewBar`) and generate commands for it
+- [ ] generate a command to validate the type
