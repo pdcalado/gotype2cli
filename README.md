@@ -8,20 +8,20 @@ Let's say you've got a type like this:
 
 ```go
 type Bar struct {
-    Height int `json:"height"`
+	Height int `json:"height"`
 }
 
 func (b *Bar) String() string {
-    return "the bar is " + b.Height + " meters high"
+	return fmt.Sprintf("the bar is %d meters high", +b.Height)
 }
 
 func (b *Bar) Raise() {
-    b.Height += 1
+	b.Height += 1
 }
 
 // RaiseBy raises the bar by the given amount
 func (b *Bar) RaiseBy(amount int) {
-    b.Height += amount
+	b.Height += amount
 }
 ```
 
@@ -73,6 +73,7 @@ If --patch is set, returns a JSON patch instead.
 (function names are converted to kebab-case for a more cli-like experience)
 
 Gotchas:
+- generated code depends on [cobra](https://github.com/spf13/cobra)
 - methods with Bar as receiver assume first argument is a Bar
 - methods returning an error are turned into commands that behave as follows:
   - if error is nil, print Bar in JSON
