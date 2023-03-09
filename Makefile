@@ -20,7 +20,7 @@ build:
 
 e2e:
 	rm testdata/bar/bar_command.go
-	./gotype2cli -type Bar ./testdata/bar/ > /tmp/bar_command.go
+	go run ./cmd -type Bar ./testdata/bar/ > /tmp/bar_command.go
 	cp /tmp/bar_command.go testdata/bar
 	go build -o bar ./testdata/bar
 	./bar -h
