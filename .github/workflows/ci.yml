@@ -53,7 +53,7 @@ jobs:
       run: make build
 
     - name: Create release archive
-      run: tar ./gotype2cli -czf ./release.tar.gz .
+      run: tar -czf ./release.tar.gz ./gotype2cli
 
     - name: Create a GitHub release
       uses: ncipollo/release-action@v1
