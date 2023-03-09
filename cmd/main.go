@@ -136,7 +136,10 @@ func main() {
 		ConstructorsList: strings.Join(constructors, ""),
 	}
 
-	tmpl.Execute(os.Stdout, data)
+	err = tmpl.Execute(os.Stdout, data)
+	if err != nil {
+		log.Fatalf("failed to execute template: %s", err)
+	}
 }
 
 type MethodKind int
@@ -165,7 +168,7 @@ func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
 		return
 	}
 
-	var kind MethodKind = Unrelated
+	var kind MethodKind
 
 	switch {
 	case isReceiverMethod(typeName, x):
