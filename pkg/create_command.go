@@ -131,7 +131,7 @@ func methodCommandRunner(
 			dec := json.NewDecoder(os.Stdin)
 			err := dec.Decode(object)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to read from stdin: %s", err)
 			}
 		}
 
