@@ -64,6 +64,7 @@ func main() {
 
 	var typesList []string
 	var typesDocs []string
+	var constructors []string
 
 	for _, filename := range pkg.GoFiles {
 		node, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -101,90 +102,155 @@ func main() {
 			if doc != "" {
 				typesDocs = append(typesDocs, fmt.Sprintf("\"%s\": `%s`,\n", funcName, doc))
 			}
+
+			if funcDocs[funcName].Kind == Constructor {
+				constructors = append(constructors, fmt.Sprintf("\"%s\": reflect.ValueOf(%s),\n", funcName, funcName))
+			}
 		}
+
 	}
 
-	tmpl, err := template.New("manifest").Parse(commandTemplate)
+	tmpl, err := template.New("template").Parse(commandTemplate)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	imports := []string{
+		"reflect",
+		"github.com/spf13/cobra",
+	}
+
 	data := struct {
-		PackageName       string
-		Imports           []string
-		MethodArgsVarName string
-		MethodDocsVarName string
-		MethodArgsList    string
-		MethodDocsList    string
+		PackageName      string
+		Imports          []string
+		TypeName         string
+		MethodArgsList   string
+		MethodDocsList   string
+		ConstructorsList string
 	}{
-		PackageName:       pkg.Name,
-		Imports:           []string{"fmt", "os", "log"},
-		MethodArgsVarName: fmt.Sprintf("methodArgs%s", targetTypeName),
-		MethodDocsVarName: fmt.Sprintf("methodDocs%s", targetTypeName),
-		MethodArgsList:    strings.Join(typesList, ""),
-		MethodDocsList:    strings.Join(typesDocs, ""),
+		PackageName:      pkg.Name,
+		Imports:          imports,
+		TypeName:         targetTypeName,
+		MethodArgsList:   strings.Join(typesList, ""),
+		MethodDocsList:   strings.Join(typesDocs, ""),
+		ConstructorsList: strings.Join(constructors, ""),
 	}
 
 	tmpl.Execute(os.Stdout, data)
 }
 
+type MethodKind int
+
+const (
+	Unrelated MethodKind = iota
+	Receiver
+	Constructor
+)
+
 type FunctionDocs struct {
 	Name string
 	Args []string
 	Docs string
+	Kind MethodKind
 }
 
-// returns map of func args and map of doc args
+// returns function args and docs
 func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
-
-	switch x := n.(type) {
-	case *ast.FuncDecl:
-		if x.Recv == nil ||
-			len(x.Recv.List) != 1 ||
-			x.Recv.List[0].Type == nil {
-			return
-		}
-
-		receiver, ok := x.Recv.List[0].Type.(*ast.StarExpr)
-		if !ok {
-			return
-		}
-
-		recvType, ok := receiver.X.(*ast.Ident)
-		if !ok {
-			return
-		}
-
-		if recvType.Name != typeName {
-			return
-		}
-
-		if x.Type.Params == nil {
-			return
-		}
-
-		funcDoc = &FunctionDocs{
-			Name: x.Name.Name,
-		}
-
-		for _, param := range x.Type.Params.List {
-			funcDoc.Args = append(funcDoc.Args, param.Names[0].Name)
-		}
-
-		if x.Doc == nil {
-			return
-		}
-
-		comments := make([]string, 0, len(x.Doc.List))
-		for _, comment := range x.Doc.List {
-			text := comment.Text
-			if strings.HasPrefix(text, "/") {
-				text = strings.TrimLeft(text, "/ ")
-			}
-			comments = append(comments, text)
-		}
-		funcDoc.Docs = strings.Join(comments, "\n")
+	x, isFuncDecl := n.(*ast.FuncDecl)
+	if !isFuncDecl {
+		return
 	}
 
+	if x.Type.Params == nil {
+		return
+	}
+
+	var kind MethodKind = Unrelated
+
+	switch {
+	case isReceiverMethod(typeName, x):
+		kind = Receiver
+	case isConstructorMethod(typeName, x):
+		kind = Constructor
+	default:
+		return
+	}
+
+	funcDoc = &FunctionDocs{
+		Name: x.Name.Name,
+		Kind: kind,
+	}
+
+	for _, param := range x.Type.Params.List {
+		funcDoc.Args = append(funcDoc.Args, param.Names[0].Name)
+	}
+
+	if x.Doc == nil {
+		return
+	}
+
+	comments := make([]string, 0, len(x.Doc.List))
+	for _, comment := range x.Doc.List {
+		text := comment.Text
+		if strings.HasPrefix(text, "/") {
+			text = strings.TrimLeft(text, "/ ")
+		}
+		comments = append(comments, text)
+	}
+	funcDoc.Docs = strings.Join(comments, "\n")
+
 	return
+}
+
+func isReceiverMethod(typeName string, x *ast.FuncDecl) bool {
+	if x.Recv == nil ||
+		len(x.Recv.List) != 1 ||
+		x.Recv.List[0].Type == nil {
+		return false
+	}
+
+	receiver, ok := x.Recv.List[0].Type.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+
+	recvType, ok := receiver.X.(*ast.Ident)
+	if !ok {
+		return false
+	}
+
+	if recvType.Name != typeName {
+		return false
+	}
+
+	return true
+}
+
+func isConstructorMethod(typeName string, x *ast.FuncDecl) bool {
+	if x.Recv != nil && len(x.Recv.List) > 0 {
+		return false
+	}
+
+	if x.Type.Results == nil || len(x.Type.Results.List) == 0 {
+		return false
+	}
+
+	for _, resultField := range x.Type.Results.List {
+		switch result := resultField.Type.(type) {
+		case *ast.StarExpr:
+			x, ok := result.X.(*ast.Ident)
+			if !ok {
+				return false
+			}
+			if x.Name == typeName {
+				return true
+			}
+		case *ast.Ident:
+			if result.Name == typeName {
+				return true
+			}
+		}
+	}
+
+	return true
 }

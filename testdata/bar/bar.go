@@ -1,4 +1,4 @@
-package bar
+package main
 
 import "fmt"
 
@@ -7,10 +7,19 @@ type Bar struct {
 	Height int `json:"height"`
 }
 
+// NewBar creates a new Bar
+func NewBar() Bar {
+	return Bar{
+		Height: 12,
+	}
+}
+
+// String implements the Stringer interface
 func (b *Bar) String() string {
 	return fmt.Sprintf("the bar is %d meters high", +b.Height)
 }
 
+// Raise the bar by 1
 func (b *Bar) Raise() {
 	b.Height += 1
 }
@@ -18,4 +27,16 @@ func (b *Bar) Raise() {
 // RaiseBy raises the bar by the given amount
 func (b *Bar) RaiseBy(amount int) {
 	b.Height += amount
+}
+
+func main() {
+	barCmd, err := makeBarCommand()
+	if err != nil {
+		panic(err)
+	}
+
+	err = barCmd.Execute()
+	if err != nil {
+		panic(err)
+	}
 }
