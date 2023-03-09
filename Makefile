@@ -19,7 +19,7 @@ build:
 	$(GOBUILD) -o gotype2cli ./cmd
 
 e2e:
-	rm testdata/bar/bar_command.go
+	rm -f testdata/bar/bar_command.go
 	go run ./cmd -type Bar ./testdata/bar/ > /tmp/bar_command.go
 	cp /tmp/bar_command.go testdata/bar
 	go build -o bar ./testdata/bar
