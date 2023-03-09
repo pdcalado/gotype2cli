@@ -7,8 +7,8 @@ type Bar struct {
 	Height int `json:"height"`
 }
 
-// NewBar creates a new Bar
-func NewBar() Bar {
+// New creates a new Bar
+func New() Bar {
 	return Bar{
 		Height: 12,
 	}
