@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -132,7 +133,7 @@ func methodCommandRunner(
 
 			dec := json.NewDecoder(os.Stdin)
 			err := dec.Decode(object)
-			if err != nil {
+			if err != nil && err != io.EOF { // ignore EOF
 				return fmt.Errorf("failed to read from stdin: %s", err)
 			}
 		}
