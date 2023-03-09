@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -126,8 +127,9 @@ func methodCommandRunner(
 		object := reflect.New(targetType).Interface()
 
 		// check if data is being piped from stdin
-		stat, _ := os.Stdin.Stat()
-		if (stat.Mode() & os.ModeCharDevice) == 0 {
+		if !isatty.IsTerminal(os.Stdin.Fd()) &&
+			!isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+
 			dec := json.NewDecoder(os.Stdin)
 			err := dec.Decode(object)
 			if err != nil {
