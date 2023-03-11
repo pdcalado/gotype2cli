@@ -62,9 +62,7 @@ func main() {
 
 	targetTypeName := typeList[0]
 
-	var typesList []string
-	var typesDocs []string
-	var constructors []string
+	mapFunctionData := make(map[string]*FunctionData)
 
 	for _, filename := range pkg.GoFiles {
 		node, err := parser.ParseFile(fset, filename, nil, parser.ParseComments)
@@ -72,45 +70,33 @@ func main() {
 			log.Fatalf("failed to parse file %s: %s", filename, err)
 		}
 
-		funcDocs := make(map[string]*FunctionDocs)
-
 		ast.Inspect(node, func(n ast.Node) bool {
 			funcDoc := inspect(targetTypeName, n)
 			if funcDoc != nil {
-				funcDocs[funcDoc.Name] = funcDoc
+				mapFunctionData[funcDoc.Name] = funcDoc
 			}
 			return true
 		})
-
-		funcNames := make([]string, 0, len(funcDocs))
-		for funcName := range funcDocs {
-			funcNames = append(funcNames, funcName)
-		}
-
-		sort.Strings(funcNames)
-
-		for _, funcName := range funcNames {
-			args := funcDocs[funcName].Args
-			stringedArgs := make([]string, 0, len(args))
-			for _, arg := range args {
-				stringedArgs = append(stringedArgs, fmt.Sprintf(`"%s"`, arg))
-			}
-
-			typesList = append(typesList, fmt.Sprintf("\"%s\": []string{%s},\n", funcName, strings.Join(stringedArgs, ", ")))
-
-			doc := funcDocs[funcName].Docs
-			if doc != "" {
-				typesDocs = append(typesDocs, fmt.Sprintf("\"%s\": `%s`,\n", funcName, doc))
-			}
-
-			if funcDocs[funcName].Kind == Constructor {
-				constructors = append(constructors, fmt.Sprintf("\"%s\": reflect.ValueOf(%s),\n", funcName, funcName))
-			}
-		}
-
 	}
 
-	tmpl, err := template.New("template").Parse(commandTemplate)
+	// convert map to list with sorted function names
+	funcNames := make([]string, 0, len(mapFunctionData))
+	for funcName := range mapFunctionData {
+		funcNames = append(funcNames, funcName)
+	}
+
+	sort.Strings(funcNames)
+
+	listFunctionData := make([]*FunctionData, 0, len(mapFunctionData))
+	for _, funcName := range funcNames {
+		listFunctionData = append(listFunctionData, mapFunctionData[funcName])
+	}
+
+	funcMap := template.FuncMap{
+		"Constructor": Constructor.get,
+	}
+
+	tmpl, err := template.New("template").Funcs(funcMap).Parse(commandTemplate)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -121,19 +107,15 @@ func main() {
 	}
 
 	data := struct {
-		PackageName      string
-		Imports          []string
-		TypeName         string
-		MethodArgsList   string
-		MethodDocsList   string
-		ConstructorsList string
+		PackageName  string
+		Imports      []string
+		TypeName     string
+		FunctionData []*FunctionData
 	}{
-		PackageName:      pkg.Name,
-		Imports:          imports,
-		TypeName:         targetTypeName,
-		MethodArgsList:   strings.Join(typesList, ""),
-		MethodDocsList:   strings.Join(typesDocs, ""),
-		ConstructorsList: strings.Join(constructors, ""),
+		PackageName:  pkg.Name,
+		Imports:      imports,
+		TypeName:     targetTypeName,
+		FunctionData: listFunctionData,
 	}
 
 	err = tmpl.Execute(os.Stdout, data)
@@ -142,23 +124,25 @@ func main() {
 	}
 }
 
-type MethodKind int
+type FunctionKind int
 
 const (
-	Unrelated MethodKind = iota
+	Unrelated FunctionKind = iota
 	Receiver
 	Constructor
 )
 
-type FunctionDocs struct {
+func (k FunctionKind) get() FunctionKind { return k }
+
+type FunctionData struct {
 	Name string
 	Args []string
 	Docs string
-	Kind MethodKind
+	Kind FunctionKind
 }
 
 // returns function args and docs
-func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
+func inspect(typeName string, n ast.Node) (funcData *FunctionData) {
 	x, isFuncDecl := n.(*ast.FuncDecl)
 	if !isFuncDecl {
 		return
@@ -168,8 +152,7 @@ func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
 		return
 	}
 
-	var kind MethodKind
-
+	var kind FunctionKind
 	switch {
 	case isReceiverMethod(typeName, x):
 		kind = Receiver
@@ -179,13 +162,13 @@ func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
 		return
 	}
 
-	funcDoc = &FunctionDocs{
+	funcData = &FunctionData{
 		Name: x.Name.Name,
 		Kind: kind,
 	}
 
 	for _, param := range x.Type.Params.List {
-		funcDoc.Args = append(funcDoc.Args, param.Names[0].Name)
+		funcData.Args = append(funcData.Args, param.Names[0].Name)
 	}
 
 	if x.Doc == nil {
@@ -194,13 +177,10 @@ func inspect(typeName string, n ast.Node) (funcDoc *FunctionDocs) {
 
 	comments := make([]string, 0, len(x.Doc.List))
 	for _, comment := range x.Doc.List {
-		text := comment.Text
-		if strings.HasPrefix(text, "/") {
-			text = strings.TrimLeft(text, "/ ")
-		}
+		text := strings.TrimLeft(comment.Text, "/ ")
 		comments = append(comments, text)
 	}
-	funcDoc.Docs = strings.Join(comments, "\n")
+	funcData.Docs = strings.Join(comments, "\n")
 
 	return
 }
