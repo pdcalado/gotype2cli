@@ -1,6 +1,8 @@
 # gotype2cli
 
-Generate code to create cli command from your Go types.
+![ci workflow](https://github.com/pdcalado/gotype2cli/actions/workflows/ci.yml/badge.svg)
+
+Generate code to create a cli command from your Go types.
 
 ## What!?
 
@@ -91,9 +93,10 @@ Bar is read from stdin in JSON format.
   - if flag `--no-object` is set, print error value (nil or message)
 - the flag `--no-object` can be used to disable the default behavior of printing the object
 - all types involved must be JSON compatible, including function arguments
-- the flag `--patch` requires that the pkg [json-patch](https://github.com/evanphx/json-patch) is imported (refer to their [README](https://github.com/evanphx/json-patch#readme) for details on RFC compatibility)
 
 ## TODO
 
+- [ ] add support for the `--no-object` flag mentioned above.
+- [ ] add a flag `--patch` to output a JSON patch instead of the resulting object. (requires that the pkg [json-patch](https://github.com/evanphx/json-patch) is imported, refer to their [README](https://github.com/evanphx/json-patch#readme) for details on RFC compatibility)
 - [ ] generate a command to validate the type
 - [ ] support methods with variadic arguments
