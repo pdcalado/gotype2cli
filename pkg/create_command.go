@@ -68,8 +68,13 @@ func CreateCommand(
 			return nil, fmt.Errorf("missing doc for method '%s', add comment and generate again", method.Name)
 		}
 
+		taggedArgNames := make([]string, len(argNames))
+		for i, argName := range argNames {
+			taggedArgNames[i] = fmt.Sprintf("<%s>", argName)
+		}
+
 		subCmd := &cobra.Command{
-			Use:   toKebabCase(method.Name) + " " + strings.Join(argNames, " "),
+			Use:   toKebabCase(method.Name) + " " + strings.Join(taggedArgNames, " "),
 			Short: description,
 			Long:  description,
 			Args:  cobra.ExactArgs(len(argNames)),
@@ -101,8 +106,13 @@ func CreateCommand(
 			return nil, fmt.Errorf("missing doc for method '%s', add comment and generate again", name)
 		}
 
+		taggedArgNames := make([]string, len(argNames))
+		for i, argName := range argNames {
+			taggedArgNames[i] = fmt.Sprintf("<%s>", argName)
+		}
+
 		subCmd := &cobra.Command{
-			Use:   toKebabCase(name) + " " + strings.Join(argNames, " "),
+			Use:   toKebabCase(name) + " " + strings.Join(taggedArgNames, " "),
 			Short: description,
 			Long:  description,
 			Args:  cobra.ExactArgs(len(argNames)),
