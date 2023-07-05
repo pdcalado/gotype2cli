@@ -66,7 +66,7 @@ func convertInput(arg string, ty reflect.Type) (reflect.Value, error) {
 			return reflect.Value{}, err
 		}
 		value.Set(reflect.ValueOf(obj).Elem())
-	case reflect.Struct:
+	case reflect.Struct, reflect.Pointer:
 		obj := reflect.New(ty).Interface()
 		err := json.Unmarshal([]byte(arg), obj)
 		if err != nil {

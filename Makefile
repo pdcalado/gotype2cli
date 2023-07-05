@@ -29,3 +29,4 @@ e2e:
 	./bar raise | ./bar raise-by 3 | grep "height\":4"
 	./bar raise-by 2 | ./bar string | grep "the bar is 2 meters high"
 	./bar new | ./bar raise | grep "height\":13"
+	./bar raise-by 2 | ./bar raise-from-bar '{"height": 3}' | grep "height\":5"

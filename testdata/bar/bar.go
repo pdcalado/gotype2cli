@@ -29,6 +29,11 @@ func (b *Bar) RaiseBy(amount int) {
 	b.Height += amount
 }
 
+// RaiseFromBar raises the bar with another bar
+func (b *Bar) RaiseFromBar(other *Bar) {
+	b.Height += other.Height
+}
+
 func main() {
 	barCmd, err := makeBarCommand()
 	if err != nil {
