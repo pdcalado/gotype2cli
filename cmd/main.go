@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	types = flag.String("type", "", "list of types separated by comma (required)")
+	types   = flag.String("type", "", "list of types separated by comma (required)")
+	doWrite = flag.Bool("w", false, "write result to (source) file instead of stdout")
 )
 
 func Usage() {
@@ -43,8 +44,6 @@ func main() {
 	}
 
 	typeList := strings.Split(*types, ",")
-
-	directory := flag.Args()[0]
 
 	loadAllSyntax := packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedImports | packages.NeedTypes | packages.NeedTypesSizes | packages.NeedSyntax | packages.NeedTypesInfo
 
@@ -124,7 +123,16 @@ func main() {
 		FunctionData: listFunctionData,
 	}
 
-	err = tmpl.Execute(os.Stdout, data)
+	writer := os.Stdout
+	if *doWrite {
+		filename := fmt.Sprintf("%s_gotype2cli.go", strings.ToLower(targetTypeName))
+		writer, err = os.Create(filename)
+		if err != nil {
+			log.Fatalf("failed to create file %s: %s", filename, err)
+		}
+	}
+
+	err = tmpl.Execute(writer, data)
 	if err != nil {
 		log.Fatalf("failed to execute template: %s", err)
 	}
