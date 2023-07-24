@@ -19,4 +19,4 @@
 
 gotype2cli
 /bar
-/testdata/bar/bar_command.go
+/testdata/bar/bar_gotype2cli.go

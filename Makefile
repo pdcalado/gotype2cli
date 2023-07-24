@@ -19,9 +19,7 @@ build:
 	$(GOBUILD) -o gotype2cli ./cmd
 
 e2e:
-	rm -f testdata/bar/bar_command.go
-	go run ./cmd -type Bar ./testdata/bar/ > /tmp/bar_command.go
-	cp /tmp/bar_command.go testdata/bar
+	go generate ./testdata/bar
 	go build -o bar ./testdata/bar
 	./bar -h
 	./bar raise | grep "height\":1"

@@ -2,7 +2,7 @@ package main
 
 import "fmt"
 
-//go:generate go run github.com/pdcalado/gotype2cli -type=Bar
+//go:generate go run github.com/pdcalado/gotype2cli/cmd -type=Bar -w
 type Bar struct {
 	Height int `json:"height"`
 }
