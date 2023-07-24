@@ -22,7 +22,8 @@ var (
 func Usage() {
 	_, _ = fmt.Fprintf(os.Stderr, "gotype2cli generates Go code to create CLI command from your Go types.\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-	_, _ = fmt.Fprintf(os.Stderr, "\tgotype2cli [flags] -types Types <directory>\n")
+	_, _ = fmt.Fprintf(os.Stderr, "\tgotype2cli [flags] -types Types [<directory>]\n")
+	_, _ = fmt.Fprintf(os.Stderr, "\ndirectory: \".\" if unspecified\n\n")
 	_, _ = fmt.Fprintf(os.Stderr, "Flags:\n")
 	flag.PrintDefaults()
 }
@@ -31,9 +32,14 @@ func main() {
 	log.SetPrefix("gotype2cli: ")
 	flag.Usage = Usage
 	flag.Parse()
-	if len(*types) == 0 || len(flag.Args()) == 0 {
+	if len(*types) == 0 {
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	directory := "."
+	if len(flag.Args()) > 0 {
+		directory = flag.Args()[0]
 	}
 
 	typeList := strings.Split(*types, ",")
