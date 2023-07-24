@@ -83,6 +83,8 @@ Bar is read from stdin in JSON format.
 
 (function names are converted to kebab-case for a more cli-like experience)
 
+(`--no-object` and `--patch` are not implemented yet, check [TODO](#todo) for more info)
+
 ## Gotchas
 
 - generated code depends on [cobra](https://github.com/spf13/cobra)
@@ -97,6 +99,5 @@ Bar is read from stdin in JSON format.
 ## TODO
 
 - [ ] add support for the `--no-object` flag mentioned above.
-- [ ] add a flag `--patch` to output a JSON patch instead of the resulting object. (requires that the pkg [json-patch](https://github.com/evanphx/json-patch) is imported, refer to their [README](https://github.com/evanphx/json-patch#readme) for details on RFC compatibility)
-- [ ] generate a command to validate the type
+- [ ] add support for the `--patch` flag mentioned above.
 - [ ] support methods with variadic arguments
