@@ -14,6 +14,13 @@ func New() Bar {
 	}
 }
 
+// NewWithHeight creates a new Bar with the given height
+func NewWithHeight(height int) Bar {
+	return Bar{
+		Height: 10,
+	}
+}
+
 // String implements the Stringer interface
 func (b *Bar) String() string {
 	return fmt.Sprintf("the bar is %d meters high", +b.Height)
@@ -40,7 +47,7 @@ func (b *Bar) RaiseFromTwoBars(other1, other2 *Bar) {
 }
 
 // RaiseFromBars raises the bar with other bars
-func (b *Bar) RaiseFromNBars(others ...*Bar) {
+func (b *Bar) RaiseFromBars(others ...*Bar) {
 	for _, other := range others {
 		b.Height += other.Height
 	}
@@ -49,7 +56,7 @@ func (b *Bar) RaiseFromNBars(others ...*Bar) {
 // RaiseByAmountAndBars raises the bar by the given amount and other bars
 func (b *Bar) RaiseByAmountAndBars(amount int, others ...*Bar) {
 	b.RaiseBy(amount)
-	b.RaiseFromNBars(others...)
+	b.RaiseFromBars(others...)
 }
 
 func main() {

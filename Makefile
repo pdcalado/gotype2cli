@@ -22,6 +22,7 @@ e2e:
 	go generate ./testdata/bar
 	go build -o bar ./testdata/bar
 	./bar -h
+	./bar new-with-height 10 | grep "height\":10"
 	./bar raise | grep "height\":1"
 	./bar raise | ./bar raise | grep "height\":2"
 	./bar raise | ./bar raise-by 3 | grep "height\":4"
@@ -29,5 +30,5 @@ e2e:
 	./bar new | ./bar raise | grep "height\":13"
 	./bar raise-by 2 | ./bar raise-from-bar '{"height": 3}' | grep "height\":5"
 	./bar raise | ./bar raise-from-two-bars '{"height": 2}' '{"height": 3}' | grep "height\":6"
-	./bar raise | ./bar raise-from-n-bars '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":10"
+	./bar raise | ./bar raise-from-bars '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":10"
 	./bar raise | ./bar raise-by-amount-and-bars 1 '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":11"

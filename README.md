@@ -34,6 +34,13 @@ func (b *Bar) Raise() {
 func (b *Bar) RaiseBy(amount int) {
   b.Height += amount
 }
+
+// RaiseFromBars raises the bar by the sum of the heights of the given bars
+func (b *Bar) RaiseFromBars(bars ...Bar) {
+  for _, bar := range bars {
+    b.Height += bar.Height
+  }
+}
 ```
 
 Using `gotype2cli` you can generate a cli command that creates and manipulates `Bar` by calling its methods, allowing you to do stuff like:
@@ -55,6 +62,10 @@ foo@bar:~$ bar new 10 | bar raise | bar raise
 
 foo@bar:~$ bar new 11 | bar string
 "the bar is 11 meters high"
+
+foo@bar:~$ # variadic methods are supported using json arrays
+foo@bar:~$ bar new 10 | bar raise-from-bars '[{"height": 2},{"height": 3},{"height": 4}]'
+{"height":19}
 
 foo@bar:~$ # exported fields can be set (not implemented)
 foo@bar:~$ bar new 10 | bar height 11
@@ -100,4 +111,3 @@ Bar is read from stdin in JSON format.
 
 - [ ] add support for the `--no-object` flag mentioned above.
 - [ ] add support for the `--patch` flag mentioned above.
-- [ ] support methods with variadic arguments
