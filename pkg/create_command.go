@@ -90,7 +90,7 @@ func CreateCommand(
 		constructorType := constructor.Type()
 
 		var callArgTypes []reflect.Type
-		for j := 1; j < constructorType.NumIn(); j++ {
+		for j := 0; j < constructorType.NumIn(); j++ {
 			callArgTypes = append(callArgTypes, constructorType.In(j))
 		}
 
