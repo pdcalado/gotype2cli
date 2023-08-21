@@ -24,6 +24,8 @@ type CreateCommandOptions struct {
 	MethodArgs map[string][]string
 	// MethodDocs is a map of method names to documentation strings
 	MethodDocs map[string]string
+	// FailOnMissingDocs generator fails if a method has no documentation
+	FailOnMissingDocs bool
 }
 
 func CreateCommand(
@@ -64,7 +66,7 @@ func CreateCommand(
 		}
 
 		description, hasDoc := methodDocs[method.Name]
-		if !hasDoc {
+		if !hasDoc && options.FailOnMissingDocs {
 			return nil, fmt.Errorf("missing doc for method '%s', add comment and generate again", method.Name)
 		}
 
