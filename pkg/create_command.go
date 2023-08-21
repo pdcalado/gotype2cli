@@ -152,7 +152,12 @@ func methodCommandRunner(
 
 		allArgs := append([]reflect.Value{reflect.ValueOf(object)}, callArgs...)
 
-		result := method.Call(allArgs)
+		var result []reflect.Value
+		if method.Type().IsVariadic() {
+			result = method.CallSlice(allArgs)
+		} else {
+			result = method.Call(allArgs)
+		}
 
 		return outputResults(object, result)
 	}
@@ -171,7 +176,12 @@ func constructorCommandRunner(
 
 		object := reflect.New(targetType).Interface()
 
-		result := method.Call(callArgs)
+		var result []reflect.Value
+		if method.Type().IsVariadic() {
+			result = method.CallSlice(callArgs)
+		} else {
+			result = method.Call(callArgs)
+		}
 
 		return outputResults(object, result)
 	}
