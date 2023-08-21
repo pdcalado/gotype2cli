@@ -182,7 +182,9 @@ func inspect(typeName string, n ast.Node) (funcData *FunctionData) {
 	}
 
 	for _, param := range x.Type.Params.List {
-		funcData.Args = append(funcData.Args, param.Names[0].Name)
+		for _, name := range param.Names {
+			funcData.Args = append(funcData.Args, name.Name)
+		}
 	}
 
 	if x.Doc == nil {
