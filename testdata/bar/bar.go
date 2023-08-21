@@ -34,6 +34,24 @@ func (b *Bar) RaiseFromBar(other *Bar) {
 	b.Height += other.Height
 }
 
+// RaiseFromTwoBars raises the bar with two other bars
+func (b *Bar) RaiseFromTwoBars(other1, other2 *Bar) {
+	b.Height += other1.Height + other2.Height
+}
+
+// RaiseFromBars raises the bar with other bars
+func (b *Bar) RaiseFromNBars(others ...*Bar) {
+	for _, other := range others {
+		b.Height += other.Height
+	}
+}
+
+// RaiseByAmountAndBars raises the bar by the given amount and other bars
+func (b *Bar) RaiseByAmountAndBars(amount int, others ...*Bar) {
+	b.RaiseBy(amount)
+	b.RaiseFromNBars(others...)
+}
+
 func main() {
 	barCmd, err := makeBarCommand()
 	if err != nil {

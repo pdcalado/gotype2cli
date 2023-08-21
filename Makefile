@@ -28,3 +28,6 @@ e2e:
 	./bar raise-by 2 | ./bar string | grep "the bar is 2 meters high"
 	./bar new | ./bar raise | grep "height\":13"
 	./bar raise-by 2 | ./bar raise-from-bar '{"height": 3}' | grep "height\":5"
+	./bar raise | ./bar raise-from-two-bars '{"height": 2}' '{"height": 3}' | grep "height\":6"
+	./bar raise | ./bar raise-from-n-bars '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":10"
+	./bar raise | ./bar raise-by-amount-and-bars 1 '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":11"
