@@ -10,7 +10,9 @@ import (
 	gotype2cli "github.com/pdcalado/gotype2cli/pkg"
 )
 
-func make{{.TypeName}}Command() (*cobra.Command, error) {
+func make{{.TypeName}}Command(
+	fopts ...func(*gotype2cli.CreateCommandOptions),
+) (*cobra.Command, error) {
 	opts := gotype2cli.CreateCommandOptions{
 		TypeName: "{{.TypeName}}",
 		MethodArgs: map[string][]string{
@@ -24,6 +26,11 @@ func make{{.TypeName}}Command() (*cobra.Command, error) {
 		Constructors: map[string]reflect.Value{
 			{{range .FunctionData}}{{if eq .Kind Constructor}}"{{.Name}}": reflect.ValueOf({{.Name}}),{{end}}{{end}}
 		},
+		ReceiverPrint: {{.ReceiverPrint}},
+	}
+
+	for _, f := range fopts {
+		f(&opts)
 	}
 
 	return gotype2cli.CreateCommand(

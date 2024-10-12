@@ -21,6 +21,9 @@ build:
 e2e:
 	go generate ./testdata/bar
 	go build -o bar ./testdata/bar
+	go generate ./testdata/repo
+	go build -o repo ./testdata/repo
+
 	./bar -h
 	./bar new-with-height 10 | grep "height\":10"
 	./bar raise | grep "height\":1"
@@ -32,3 +35,9 @@ e2e:
 	./bar raise | ./bar raise-from-two-bars '{"height": 2}' '{"height": 3}' | grep "height\":6"
 	./bar raise | ./bar raise-from-bars '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":10"
 	./bar raise | ./bar raise-by-amount-and-bars 1 '[{"height": 2},{"height": 3},{"height": 4}]' | grep "height\":11"
+	./bar raise | timeout 2 ./bar serve localhost 8080 &
+	sleep 1 && ./bar fetch-clone localhost 8080 | grep "height\":1"
+	./bar noop
+	./repo -h
+	./repo check-health localhost 8080
+	./repo fetch localhost 8080

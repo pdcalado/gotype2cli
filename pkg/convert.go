@@ -1,12 +1,15 @@
 package pkg
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
@@ -16,6 +19,34 @@ func toKebabCase(str string) string {
 	snake := matchFirstCap.ReplaceAllString(str, "${1}-${2}")
 	snake = matchAllCap.ReplaceAllString(snake, "${1}-${2}")
 	return strings.ToLower(snake)
+}
+
+func convertInputsWithContext(
+	ctx context.Context,
+	args []string,
+	types []reflect.Type,
+) ([]reflect.Value, error) {
+
+	values := make([]reflect.Value, len(args))
+
+	// check if the first argument is a context.Context
+	if len(types) > 0 {
+		_, isCtx := reflect.New(types[0]).Elem().Interface().(context.Context)
+		if isCtx {
+			values[0] = reflect.ValueOf(ctx)
+			types = types[1:]
+		}
+	}
+
+	for i, arg := range args {
+		value, err := convertInput(arg, types[i])
+		if err != nil {
+			return nil, err
+		}
+		values[i] = value
+	}
+
+	return values, nil
 }
 
 func convertInputs(
@@ -80,17 +111,19 @@ func convertInput(arg string, ty reflect.Type) (reflect.Value, error) {
 	return value, nil
 }
 
+// outputResults prints the results of a command
+// return true if any results were printed
 func outputResults(
-	obj interface{},
+	cmd *cobra.Command,
 	results []reflect.Value,
-) error {
-	var toPrint []string
+) (bool, error) {
+	printed := false
 
 	for _, result := range results {
 		// check if a result is an error
 		if result.Type() == reflect.TypeOf((*error)(nil)).Elem() {
 			if !result.IsNil() {
-				return result.Interface().(error)
+				return false, result.Interface().(error)
 			}
 			continue
 		}
@@ -98,22 +131,15 @@ func outputResults(
 		// convert result to json
 		buf, err := json.Marshal(result.Interface())
 		if err != nil {
-			return fmt.Errorf("failed to marshal result: %s", err)
+			return false, fmt.Errorf("failed to marshal result: %s", err)
 		}
 
-		toPrint = append(toPrint, string(buf))
+		printed = true
+		_, err = cmd.OutOrStdout().Write(buf)
+		if err != nil {
+			return false, fmt.Errorf("failed to write result: %s", err)
+		}
 	}
 
-	// if no results, print the object
-	if len(toPrint) == 0 {
-		buf, _ := json.Marshal(obj)
-		fmt.Println(string(buf))
-	}
-
-	// print results
-	for _, str := range toPrint {
-		fmt.Println(str)
-	}
-
-	return nil
+	return printed, nil
 }

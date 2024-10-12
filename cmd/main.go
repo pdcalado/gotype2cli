@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	types   = flag.String("type", "", "list of types separated by comma (required)")
-	doWrite = flag.Bool("w", false, "write result to (source) file instead of stdout")
+	types         = flag.String("type", "", "list of types separated by comma (required)")
+	doWrite       = flag.Bool("w", false, "write result to (source) file instead of stdout")
+	receiverPrint = flag.Bool("receiver-print", true, "print receiver when method returns only error or void")
 )
 
 func Usage() {
@@ -112,15 +113,17 @@ func main() {
 	}
 
 	data := struct {
-		PackageName  string
-		Imports      []string
-		TypeName     string
-		FunctionData []*FunctionData
+		PackageName   string
+		Imports       []string
+		TypeName      string
+		FunctionData  []*FunctionData
+		ReceiverPrint bool
 	}{
-		PackageName:  pkg.Name,
-		Imports:      imports,
-		TypeName:     targetTypeName,
-		FunctionData: listFunctionData,
+		PackageName:   pkg.Name,
+		Imports:       imports,
+		TypeName:      targetTypeName,
+		FunctionData:  listFunctionData,
+		ReceiverPrint: *receiverPrint,
 	}
 
 	writer := os.Stdout
@@ -208,17 +211,29 @@ func isReceiverMethod(typeName string, x *ast.FuncDecl) bool {
 		return false
 	}
 
-	receiver, ok := x.Recv.List[0].Type.(*ast.StarExpr)
-	if !ok {
+	receiver := x.Recv.List[0].Type
+
+	if receiver == nil {
 		return false
 	}
 
-	recvType, ok := receiver.X.(*ast.Ident)
-	if !ok {
+	name := ""
+
+	switch o := receiver.(type) {
+	case *ast.Ident:
+		name = o.Name
+	case *ast.StarExpr:
+		recvType, ok := o.X.(*ast.Ident)
+		if !ok {
+			return false
+		}
+
+		name = recvType.Name
+	default:
 		return false
 	}
 
-	if recvType.Name != typeName {
+	if name != typeName {
 		return false
 	}
 
