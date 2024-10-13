@@ -233,11 +233,7 @@ func isReceiverMethod(typeName string, x *ast.FuncDecl) bool {
 		return false
 	}
 
-	if name != typeName {
-		return false
-	}
-
-	return true
+	return name == typeName
 }
 
 func isConstructorMethod(typeName string, x *ast.FuncDecl) bool {
