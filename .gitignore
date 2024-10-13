@@ -20,3 +20,6 @@
 gotype2cli
 /bar
 /testdata/bar/bar_gotype2cli.go
+/repo
+/testdata/repo/repo_gotype2cli.go
+
