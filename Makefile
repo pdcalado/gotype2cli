@@ -40,4 +40,4 @@ e2e:
 	./bar noop
 	./repo -h
 	./repo check-health localhost 8080
-	./repo fetch localhost 8080
+	./repo fetch localhost 8080 | grep "height\":1"

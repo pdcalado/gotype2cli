@@ -99,14 +99,24 @@ func outputResults(
 			continue
 		}
 
-		// convert result to json
-		buf, err := json.Marshal(result.Interface())
-		if err != nil {
-			return false, fmt.Errorf("failed to marshal result: %s", err)
+		var buf []byte
+
+		switch result.Interface().(type) {
+		case []byte:
+			buf = result.Interface().([]byte)
+		case string:
+			buf = []byte(result.Interface().(string))
+		default:
+			// convert result to json
+			var err error
+			buf, err = json.Marshal(result.Interface())
+			if err != nil {
+				return false, fmt.Errorf("failed to marshal result: %s", err)
+			}
 		}
 
 		printed = true
-		_, err = cmd.OutOrStdout().Write(buf)
+		_, err := cmd.OutOrStdout().Write(buf)
 		if err != nil {
 			return false, fmt.Errorf("failed to write result: %s", err)
 		}
