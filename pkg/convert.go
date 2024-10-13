@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -19,34 +18,6 @@ func toKebabCase(str string) string {
 	snake := matchFirstCap.ReplaceAllString(str, "${1}-${2}")
 	snake = matchAllCap.ReplaceAllString(snake, "${1}-${2}")
 	return strings.ToLower(snake)
-}
-
-func convertInputsWithContext(
-	ctx context.Context,
-	args []string,
-	types []reflect.Type,
-) ([]reflect.Value, error) {
-
-	values := make([]reflect.Value, len(args))
-
-	// check if the first argument is a context.Context
-	if len(types) > 0 {
-		_, isCtx := reflect.New(types[0]).Elem().Interface().(context.Context)
-		if isCtx {
-			values[0] = reflect.ValueOf(ctx)
-			types = types[1:]
-		}
-	}
-
-	for i, arg := range args {
-		value, err := convertInput(arg, types[i])
-		if err != nil {
-			return nil, err
-		}
-		values[i] = value
-	}
-
-	return values, nil
 }
 
 func convertInputs(
